@@ -235,7 +235,7 @@ jobs:
     steps:
       - name: Success Notification
         run: |
-          echo "✅ Pipeline réussi !"
+          echo "Pipeline réussi !"
           echo "Branch: ${{ github.ref }}"
           echo "Commit: ${{ github.sha }}"
           echo "Services: Gateway, Enrollment, Course"
