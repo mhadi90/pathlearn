@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: course-db
+    environment:
+      POSTGRES_DB: course_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    container_name: course-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
