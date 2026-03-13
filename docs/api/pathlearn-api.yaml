@@ -1,0 +1,774 @@
+openapi: 3.0.3
+info:
+  title: PathLearn API
+  description: |
+    API complète de la plateforme de formation PathLearn.
+    
+    **Architecture:** Microservices avec API Gateway
+    
+    **Authentification:** JWT Bearer Token
+    
+    **Base URL:** https://gateway-production-c9e4.up.railway.app
+  version: 1.0.0
+  contact:
+    name: Équipe PathLearn
+    email: contact@pathlearn.com
+
+servers:
+  - url: https://gateway-production-c9e4.up.railway.app
+    description: Production
+  - url: http://localhost:8080
+    description: Développement local
+
+tags:
+  - name: Authentication
+    description: Gestion des utilisateurs et authentification
+  - name: Courses
+    description: Gestion du catalogue de formations
+  - name: Modules
+    description: Gestion des modules de formation
+  - name: Enrollments
+    description: Gestion des inscriptions et progression
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ==========================================
+  # AUTHENTICATION ENDPOINTS
+  # ==========================================
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Créer un compte
+      description: Inscription d'un nouvel utilisateur. Retourne un JWT token.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - nom
+                - prenom
+                - role
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: zineb.es-saih@gmail.com
+                password:
+                  type: string
+                  format: password
+                  example: Zineb2002
+                nom:
+                  type: string
+                  example: Doe
+                prenom:
+                  type: string
+                  example: John
+                role:
+                  type: string
+                  enum: [VISITEUR, APPRENTI, FORMATEUR]
+                  example: APPRENTI
+      responses:
+        '201':
+          description: Compte créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Se connecter
+      description: Authentification avec email et mot de passe. Retourne un JWT token.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: zineb.es-saih@gmail.com
+                password:
+                  type: string
+                  format: password
+                  example: Zineb2002
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Email ou mot de passe invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Obtenir le profil
+      description: Récupère les informations de l'utilisateur connecté.
+      responses:
+        '200':
+          description: Profil utilisateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      tags:
+        - Authentication
+      summary: Mettre à jour le profil
+      description: Modifie les informations de l'utilisateur connecté.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom:
+                  type: string
+                  example: Updated
+                prenom:
+                  type: string
+                  example: Name
+                email:
+                  type: string
+                  format: email
+                  example: new@example.com
+      responses:
+        '200':
+          description: Profil mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Non authentifié
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Se déconnecter
+      description: Invalide le token JWT actuel.
+      responses:
+        '200':
+          description: Déconnexion réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logged out successfully
+
+  # ==========================================
+  # COURSE ENDPOINTS
+  # ==========================================
+  /courses:
+    get:
+      tags:
+        - Courses
+      summary: Lister les formations
+      description: Récupère toutes les formations disponibles.
+      security: []
+      responses:
+        '200':
+          description: Liste des formations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+    
+    post:
+      tags:
+        - Courses
+      summary: Créer une formation
+      description: Crée une nouvelle formation. Nécessite le rôle FORMATEUR ou ADMIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseInput'
+      responses:
+        '201':
+          description: Formation créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+        '403':
+          description: Accès interdit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /courses/{id}:
+    get:
+      tags:
+        - Courses
+      summary: Détails d'une formation
+      description: Récupère les détails d'une formation par son ID.
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Détails de la formation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+        '404':
+          description: Formation non trouvée
+    
+    put:
+      tags:
+        - Courses
+      summary: Modifier une formation
+      description: Modifie une formation existante. Nécessite le rôle FORMATEUR ou ADMIN.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseInput'
+      responses:
+        '200':
+          description: Formation modifiée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+        '403':
+          description: Accès interdit
+        '404':
+          description: Formation non trouvée
+    
+    delete:
+      tags:
+        - Courses
+      summary: Supprimer une formation
+      description: Supprime une formation. Nécessite le rôle FORMATEUR ou ADMIN.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Formation supprimée
+        '403':
+          description: Accès interdit
+        '404':
+          description: Formation non trouvée
+
+  # ==========================================
+  # MODULE ENDPOINTS
+  # ==========================================
+  /courses/{courseId}/modules:
+    get:
+      tags:
+        - Modules
+      summary: Lister les modules
+      description: Récupère tous les modules d'une formation.
+      security: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Liste des modules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Module'
+    
+    post:
+      tags:
+        - Modules
+      summary: Ajouter un module
+      description: Ajoute un module à une formation. Nécessite le rôle FORMATEUR ou ADMIN.
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModuleInput'
+      responses:
+        '201':
+          description: Module créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Module'
+        '403':
+          description: Accès interdit
+
+  /courses/{courseId}/modules/{id}:
+    put:
+      tags:
+        - Modules
+      summary: Modifier un module
+      description: Modifie un module existant. Nécessite le rôle FORMATEUR ou ADMIN.
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModuleInput'
+      responses:
+        '200':
+          description: Module modifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Module'
+        '403':
+          description: Accès interdit
+        '404':
+          description: Module non trouvé
+    
+    delete:
+      tags:
+        - Modules
+      summary: Supprimer un module
+      description: Supprime un module. Nécessite le rôle FORMATEUR ou ADMIN.
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Module supprimé
+        '403':
+          description: Accès interdit
+        '404':
+          description: Module non trouvé
+
+  # ==========================================
+  # ENROLLMENT ENDPOINTS
+  # ==========================================
+  /inscriptions:
+    post:
+      tags:
+        - Enrollments
+      summary: S'inscrire à une formation
+      description: Crée une inscription à une formation. Nécessite le rôle APPRENTI ou ADMIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - idUtilisateur
+                - idFormation
+              properties:
+                idUtilisateur:
+                  type: integer
+                  example: 2
+                idFormation:
+                  type: integer
+                  example: 1
+      responses:
+        '201':
+          description: Inscription créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+        '403':
+          description: Accès interdit
+
+  /inscriptions/{id}:
+    get:
+      tags:
+        - Enrollments
+      summary: Détails d'une inscription
+      description: Récupère les détails d'une inscription.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Détails de l'inscription
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+        '404':
+          description: Inscription non trouvée
+
+  /inscriptions/utilisateur/{idUtilisateur}:
+    get:
+      tags:
+        - Enrollments
+      summary: Inscriptions d'un utilisateur
+      description: Récupère toutes les inscriptions d'un utilisateur. Nécessite APPRENTI, FORMATEUR ou ADMIN.
+      parameters:
+        - name: idUtilisateur
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Liste des inscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Enrollment'
+        '403':
+          description: Accès interdit
+
+  /inscriptions/formation/{idFormation}:
+    get:
+      tags:
+        - Enrollments
+      summary: Inscrits à une formation
+      description: Récupère tous les inscrits d'une formation. Nécessite FORMATEUR ou ADMIN.
+      parameters:
+        - name: idFormation
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Liste des inscrits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Enrollment'
+        '403':
+          description: Accès interdit
+
+  /inscriptions/{id}/progression:
+    put:
+      tags:
+        - Enrollments
+      summary: Mettre à jour la progression
+      description: Met à jour le pourcentage de progression (0-100). Passe automatiquement à TERMINEE à 100%.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pourcentageProgression
+              properties:
+                pourcentageProgression:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+                  example: 50
+      responses:
+        '200':
+          description: Progression mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+        '403':
+          description: Accès interdit
+
+  /inscriptions/{id}/annuler:
+    put:
+      tags:
+        - Enrollments
+      summary: Annuler une inscription
+      description: Annule une inscription. Nécessite APPRENTI ou ADMIN.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Inscription annulée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+        '403':
+          description: Accès interdit
+
+# ==========================================
+# COMPONENTS
+# ==========================================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtenu via /auth/register ou /auth/login
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        role:
+          type: string
+          example: APPRENTI
+        email:
+          type: string
+          example: zineb.es-saih@gmail.com
+        userId:
+          type: integer
+          example: 1
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          example: zineb.es-saih@gmail.com
+        nom:
+          type: string
+          example: Doe
+        prenom:
+          type: string
+          example: John
+        role:
+          type: string
+          enum: [VISITEUR, APPRENTI, FORMATEUR, ADMIN]
+          example: APPRENTI
+        dateCreation:
+          type: string
+          format: date-time
+          example: '2026-03-13T04:46:43'
+
+    CourseInput:
+      type: object
+      required:
+        - titre
+        - description
+        - domaine
+        - niveau
+        - duree
+        - prix
+        - idFormateur
+        - statut
+      properties:
+        titre:
+          type: string
+          example: Dev Web avec React
+        description:
+          type: string
+          example: Apprenez React de A à Z
+        domaine:
+          type: string
+          example: Developpement
+        niveau:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 2
+        duree:
+          type: integer
+          description: Durée en minutes
+          example: 720
+        prix:
+          type: number
+          format: double
+          example: 79.99
+        idFormateur:
+          type: integer
+          example: 1
+        statut:
+          type: string
+          enum: [BROUILLON, PUBLIE, ARCHIVE]
+          example: PUBLIE
+
+    Course:
+      allOf:
+        - $ref: '#/components/schemas/CourseInput'
+        - type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            note:
+              type: number
+              format: double
+              nullable: true
+              example: 4.5
+            createdAt:
+              type: string
+              format: date-time
+            dateModif:
+              type: string
+              format: date-time
+
+    ModuleInput:
+      type: object
+      required:
+        - titre
+        - description
+        - numeroOrdre
+        - dureeMinutes
+      properties:
+        titre:
+          type: string
+          example: Introduction à React
+        description:
+          type: string
+          example: Les bases de React
+        numeroOrdre:
+          type: integer
+          example: 1
+        dureeMinutes:
+          type: integer
+          example: 45
+
+    Module:
+      allOf:
+        - $ref: '#/components/schemas/ModuleInput'
+        - type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            createdAt:
+              type: string
+              format: date-time
+
+    Enrollment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        idUtilisateur:
+          type: integer
+          example: 2
+        idFormation:
+          type: integer
+          example: 1
+        statut:
+          type: string
+          enum: [EN_COURS, TERMINEE, ANNULEE]
+          example: EN_COURS
+        pourcentageProgression:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 0
+        dateInscription:
+          type: string
+          format: date-time
+        dateFin:
+          type: string
+          format: date-time
+          nullable: true
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Error message here
