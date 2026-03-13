@@ -19,7 +19,7 @@ Pour utiliser l'API, il faut d'abord récupérer un token :
 # Se connecter
 curl -X POST https://gateway-production-c9e4.up.railway.app/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email": "user@example.com", "password": "password123"}'
+  -d '{"email": "zineb.es-saih@example.com", "password": "Zineb2002"}'
 ```
 
 Ensuite utilise le token dans les requêtes :

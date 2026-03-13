@@ -60,11 +60,11 @@ paths:
                 email:
                   type: string
                   format: email
-                  example: user@example.com
+                  example: zineb.es-saih@gmail.com
                 password:
                   type: string
                   format: password
-                  example: password123
+                  example: Zineb2002
                 nom:
                   type: string
                   example: Doe
@@ -109,11 +109,11 @@ paths:
                 email:
                   type: string
                   format: email
-                  example: user@example.com
+                  example: zineb.es-saih@gmail.com
                 password:
                   type: string
                   format: password
-                  example: password123
+                  example: Zineb2002
       responses:
         '200':
           description: Connexion réussie
@@ -613,7 +613,7 @@ components:
           example: APPRENTI
         email:
           type: string
-          example: user@example.com
+          example: zineb.es-saih@gmail.com
         userId:
           type: integer
           example: 1
@@ -626,7 +626,7 @@ components:
           example: 1
         email:
           type: string
-          example: user@example.com
+          example: zineb.es-saih@gmail.com
         nom:
           type: string
           example: Doe
