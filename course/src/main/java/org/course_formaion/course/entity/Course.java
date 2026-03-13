@@ -18,8 +18,8 @@ public class Course {
     private String description;
 
     private String domaine;
-    private Integer niveau;   // ex: 1..5
-    private Integer duree;    // ex: heures ou minutes selon votre choix
+    private Integer niveau;
+    private Integer duree;
     private BigDecimal prix;
 
     @Column(name = "id_formateur")
