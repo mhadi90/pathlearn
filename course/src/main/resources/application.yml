@@ -1,20 +1,28 @@
 server:
-  port: 8083
+  port: 8080
 
 spring:
   application:
-    name: course
+    name: gateway-service
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/course_db
-    driverClassName: org.postgresql.Driver
-    username: postgres
-    password: 123456789
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: http://auth-service.railway.internal:8082
+          predicates:
+            - Path=/auth/**
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+        - id: course-service
+          uri: http://course-service.railway.internal:8083
+          predicates:
+            - Path=/courses/**
 
+        - id: enrollment-service
+          uri: http://enrollment-service.railway.internal:8084
+          predicates:
+            - Path=/inscriptions/**
 
+app:
+  jwt:
+    secret: your-super-secret-key-that-is-at-least-32-characters
