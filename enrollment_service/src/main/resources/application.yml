@@ -1,0 +1,21 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: enrollment-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/enrollment_db
+    driverClassName: org.postgresql.Driver
+    username: postgres
+    password: 123456789
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  jersey:
+    type: filter
+    application-path: /
