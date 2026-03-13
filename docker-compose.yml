@@ -6,9 +6,7 @@ services:
     environment:
       POSTGRES_DB: auth_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-123456789}
-    ports:
-      - "5432:5432"
+      POSTGRES_PASSWORD: 123456789
     volumes:
       - auth-data:/var/lib/postgresql/data
     healthcheck:
@@ -23,9 +21,7 @@ services:
     environment:
       POSTGRES_DB: course_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-123456789}
-    ports:
-      - "5433:5432"
+      POSTGRES_PASSWORD: 123456789
     volumes:
       - course-data:/var/lib/postgresql/data
     healthcheck:
@@ -40,9 +36,7 @@ services:
     environment:
       POSTGRES_DB: enrollment_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-123456789}
-    ports:
-      - "5434:5432"
+      POSTGRES_PASSWORD: 123456789
     volumes:
       - enrollment-data:/var/lib/postgresql/data
     healthcheck:
@@ -60,34 +54,33 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/auth_db
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-123456789}
-      APP_JWT_SECRET: ${JWT_SECRET:-your-super-secret-key-that-is-at-least-32-characters}
+      SPRING_DATASOURCE_PASSWORD: 123456789
     depends_on:
       auth-db:
         condition: service_healthy
 
   course-service:
-    build: ./course-service
+    build: ./course
     container_name: course-service
     ports:
       - "8083:8083"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://course-db:5432/course_db
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-123456789}
+      SPRING_DATASOURCE_PASSWORD: 123456789
     depends_on:
       course-db:
         condition: service_healthy
 
   enrollment-service:
-    build: ./enrollment-service
+    build: ./enrollment_service
     container_name: enrollment-service
     ports:
       - "8084:8084"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://enrollment-db:5432/enrollment_db
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-123456789}
+      SPRING_DATASOURCE_PASSWORD: 123456789
     depends_on:
       enrollment-db:
         condition: service_healthy
@@ -98,7 +91,6 @@ services:
     ports:
       - "8080:8080"
     environment:
-      APP_JWT_SECRET: ${JWT_SECRET:-your-super-secret-key-that-is-at-least-32-characters}
       AUTH_SERVICE_URL: http://auth-service:8082
       COURSE_SERVICE_URL: http://course-service:8083
       ENROLLMENT_SERVICE_URL: http://enrollment-service:8084
