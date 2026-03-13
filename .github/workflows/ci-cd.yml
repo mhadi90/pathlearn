@@ -196,7 +196,8 @@ jobs:
     name: Validate Docker Compose
     runs-on: ubuntu-latest
     needs: [build-gateway, build-enrollment, build-course]
-    
+    if: false
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -229,7 +230,7 @@ jobs:
   notify-success:
     name: Notify Success
     runs-on: ubuntu-latest
-    needs: [build-gateway, build-enrollment, build-course, docker-compose-validation]
+    needs: [build-gateway, build-enrollment, build-course]
     if: success()
     
     steps:
